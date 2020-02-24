@@ -126,14 +126,17 @@ void sync_process()
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "estimator");
+    ros::init(argc, argv, "estimator_node");
 	ros::NodeHandle n("~"); 
 	//设置rosconsole调试级别
-	ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info);
-	ROS_INFO("Hello ROS!");
+	ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug);
+	ROS_INFO("Estimator_node start!");
+	 if(argc != 2){
+        printf("please intput: rosrun estimator estimator_exc [config file] \n");
+        return 1;
+    }
 
 	string config_file = argv[1];
- 	cout<<"config_file: "<<  config_file<<endl;
 	readParameters(config_file);
     estimator.setParameter();
 
