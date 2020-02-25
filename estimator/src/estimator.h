@@ -5,7 +5,11 @@
 #include<map>
 #include<queue>
 #include<mutex>
+#include<thread>
+#include<std_msgs/Header.h>
 #include"featuretracker.h"
+#include"feature_manager.h"
+#include"parameters.h"
 using namespace std;
 using namespace Eigen;
 
@@ -43,11 +47,26 @@ public:
 
 
 	FeatureTracker featureTracker;
+	FeatureManager f_manager;
+	
 
 private:
 	int inputImageCnt;
 	mutex mBuf;  //特征点Buf的互斥量
 	queue<pair<double, map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>>>> featureBuf;
+	thread processThread;
+	bool Flag_thread;
+	bool marginalization_flag;
+	bool solver_flag;
+	int frame_count;
+	
+	Vector3d Ps[(WINDOW_SIZE + 1)], ric[2];
+    Matrix3d Rs[(WINDOW_SIZE + 1)], tic[2];     //Rs=T^w_imu
+
+	void processMeasurements();
+	void processImage(const map<int, vector<Eigen::Matrix<double, 7, 1>>> &image, const double t);
+
+
 
 
 };

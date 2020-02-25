@@ -193,7 +193,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
         xyz_uv_velocity<<cur_un_right_pts[i].x , cur_un_right_pts[i].y , 1 , cur_right_pts[i].x , cur_right_pts[i].y, right_pts_velocity[i].x , right_pts_velocity[i].y ;
         int feature_id= right_ids[i];
-        featureFrame[feature_id].emplace_back(0, xyz_uv_velocity);
+        featureFrame[feature_id].emplace_back(1, xyz_uv_velocity);
     }
     return featureFrame;
 }
