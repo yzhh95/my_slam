@@ -14,7 +14,7 @@ public:
     FeatureTracker();
     ~FeatureTracker();
     //跟踪图片
-    map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> trackImage(double t, cv::Mat &Imgleft, cv::Mat &Imgright); 
+    map<int, vector< Eigen::Matrix<double, 7, 1>>> trackImage(double t, cv::Mat &Imgleft, cv::Mat &Imgright); 
     
 private:
 

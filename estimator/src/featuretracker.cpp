@@ -105,7 +105,7 @@ vector<cv::Point2f> FeatureTracker::ptsVelocity(vector<int> &ids, vector<cv::Poi
     return pts_velocity;
 }
 
-map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackImage(double t, cv::Mat &Imgleft, cv::Mat &Imgright)
+map<int, vector<Eigen::Matrix<double, 7, 1>>> FeatureTracker::trackImage(double t, cv::Mat &Imgleft, cv::Mat &Imgright)
 {
     cur_time = t;
     vector<cv::Point2f> cur_pts, cur_un_pts, pts_velocity, cur_right_pts, cur_un_right_pts, right_pts_velocity;
@@ -180,20 +180,20 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     prev_pts=cur_pts;
     prev_time=cur_time;
     
-    map<int, vector<pair<int, Eigen::Matrix<double, 7,1>>>> featureFrame;
+    map<int, vector<Eigen::Matrix<double, 7,1>>> featureFrame;
     for(size_t i=0; i < ids.size(); i++)
     {
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
         xyz_uv_velocity<<cur_un_pts[i].x , cur_un_pts[i].y , 1 , cur_pts[i].x , cur_pts[i].y, pts_velocity[i].x , pts_velocity[i].y ;
         int feature_id= ids[i];
-        featureFrame[feature_id].emplace_back(0, xyz_uv_velocity);
+        featureFrame[feature_id].emplace_back( xyz_uv_velocity);
     }
     for(size_t i=0; i <right_ids.size(); i++)
     {
         Eigen::Matrix<double, 7, 1> xyz_uv_velocity;
         xyz_uv_velocity<<cur_un_right_pts[i].x , cur_un_right_pts[i].y , 1 , cur_right_pts[i].x , cur_right_pts[i].y, right_pts_velocity[i].x , right_pts_velocity[i].y ;
         int feature_id= right_ids[i];
-        featureFrame[feature_id].emplace_back(1, xyz_uv_velocity);
+        featureFrame[feature_id].emplace_back(xyz_uv_velocity);
     }
     return featureFrame;
 }
