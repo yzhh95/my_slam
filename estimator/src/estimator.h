@@ -69,12 +69,9 @@ private:
 
 	void updateLatestStates();
 
-	
 	void slideWindow();
 	
 	void clearState();
-
-	bool failureDetection();
 
 	void outliersRejection(set<int> &removeIndex);
 

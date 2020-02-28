@@ -23,7 +23,7 @@ using namespace Eigen;
 
 Estimator estimator;
 mutex m_buf;     //保护数据存入
-queue<sensor_msgs::ImuConstPtr> imu_buf;
+//queue<sensor_msgs::ImuConstPtr> imu_buf;
 queue<sensor_msgs::ImageConstPtr> imgleft_buf;
 queue<sensor_msgs::ImageConstPtr> imgright_buf;
 
@@ -34,7 +34,7 @@ void readParameters(string config_file){
 
 void imu_callback(const sensor_msgs::ImuConstPtr & imu_msg)
 {
-	//ROS_INFO("Imu");
+	ROS_INFO("input Imu");
 	double t = imu_msg->header.stamp.toSec();
     double dx = imu_msg->linear_acceleration.x;
     double dy = imu_msg->linear_acceleration.y;
@@ -44,13 +44,13 @@ void imu_callback(const sensor_msgs::ImuConstPtr & imu_msg)
     double rz = imu_msg->angular_velocity.z;
     Vector3d acc(dx, dy, dz);
     Vector3d gyr(rx, ry, rz);
-    estimator.inputIMU(t, acc, gyr);
+    //estimator.inputIMU(t, acc, gyr);
 	return;
 }
 
 void ImageLeft_callback(const sensor_msgs::ImageConstPtr & image_msg)
 {
-	//ROS_INFO("ImageLeft");
+	ROS_INFO("ImageLeft");
 	m_buf.lock();
     imgleft_buf.push(image_msg);
     m_buf.unlock();
@@ -60,7 +60,7 @@ void ImageLeft_callback(const sensor_msgs::ImageConstPtr & image_msg)
 
 void ImageRight_callback(const sensor_msgs::ImageConstPtr & image_msg)
 {
-	//ROS_INFO("ImageRight");
+	ROS_INFO("ImageRight");
 	m_buf.lock();
     imgright_buf.push(image_msg);
     m_buf.unlock();
@@ -111,11 +111,12 @@ void sync_process()
 				imgleft_buf.pop();
 				imgright = getImageFromMsg(imgright_buf.front());
 				imgright_buf.pop();
+				printf("t0=%lf, t1=%lf \n",time0, time1);
 			}
 		}
 		m_buf.unlock();
-		if(!imgleft.empty())
-			estimator.inputImage(imgleft_buf.front()->header.stamp.toSec(), imgleft, imgright);
+		//if(!imgleft.empty())
+			//estimator.inputImage(imgleft_buf.front()->header.stamp.toSec(), imgleft, imgright);
 
 		std::chrono::milliseconds dura(2);
 		std::this_thread::sleep_for(dura);

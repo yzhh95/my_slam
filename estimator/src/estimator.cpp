@@ -98,7 +98,7 @@ void Estimator::processImage(const map<int, vector< Eigen::Matrix<double, 7, 1>>
 		optimization();
 		set<int> removeIndex;
         outliersRejection(removeIndex);
-        f_manager.removeOutlier(removeIndex);
+        f_manager.removeOutlier(removeIndex);    //去除深度估计误差较大的点
 		 if (failureDetection())
 		 {
            	ROS_WARN("failure detection!");
@@ -109,11 +109,6 @@ void Estimator::processImage(const map<int, vector< Eigen::Matrix<double, 7, 1>>
 		 }
 		slideWindow();
 	}
-}
-
-bool Estimator::failureDetection()
-{
-
 }
 
 
