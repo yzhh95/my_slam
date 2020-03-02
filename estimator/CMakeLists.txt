@@ -32,17 +32,22 @@ include_directories(
 #不打算给其他软件包作依赖
 catkin_package()
 
+add_library(estimator_lib
+    src/parameters.cpp
+	src/featuretracker.cpp
+	src/feature_manager.cpp
+	src/estimator.cpp
+	src/pub_topic.cpp)
 
-#[[
-add_library(vins_lib
-    src/estimator/parameters.cpp
-)
+target_link_libraries(estimator_lib ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
-target_link_libraries(vins_lib ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES})
-]]
+add_executable(estimator_exc src/estimator_node.cpp)
 
-add_executable(estimator_exc src/rosNodeTest.cpp)
-target_link_libraries(estimator_exc ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRARIES}) 
+target_link_libraries(estimator_exc 
+	estimator_lib
+	${catkin_LIBRARIES} 
+	${OpenCV_LIBS} 
+	${CERES_LIBRARIES}) 
 
 
 

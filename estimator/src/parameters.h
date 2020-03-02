@@ -12,7 +12,7 @@ using namespace std;
 
 const double FOCAL_LENGTH = 460.0;
 const int WINDOW_SIZE = 10;
-const double INIT_DEPTH = -1.0;
+const double INIT_DEPTH = -1.0;    //特征点的初始深度
 
 extern double MIN_PARALLAX;
 extern std::vector<Eigen::Matrix3d> RIC;
@@ -26,5 +26,6 @@ extern std::vector<std::string> CAM_NAMES;
 extern int MAX_CNT;
 extern int MIN_DIST;
 extern double F_THRESHOLD;
+extern int SHOW_TRACK;
 
 void readParameters(std::string config_file);

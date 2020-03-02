@@ -243,7 +243,7 @@ void FeatureManager::removeFront(int frame_count)
         else
         {
             int j = WINDOW_SIZE - 1 - it->start_frame;
-            if (it->start_frame + it->feature_per_frame.size() < frame_count )
+            if (int(it->start_frame + it->feature_per_frame.size()) < frame_count )
                 continue;
             it->feature_per_frame.erase(it->feature_per_frame.begin() + j);
             if (it->feature_per_frame.size() == 0)
@@ -283,7 +283,6 @@ void FeatureManager::removeBackShiftDepth(Eigen::Matrix3d marg_R, Eigen::Vector3
     }
 }
 
-
 void FeatureManager::removeOutlier(set<int> &outlierIndex)
 {
     std::set<int>::iterator itSet;
@@ -295,6 +294,13 @@ void FeatureManager::removeOutlier(set<int> &outlierIndex)
             feature.erase(it);
     }
 }
+
+
+ void FeatureManager::clearState()
+{
+    feature.clear();
+}
+
     
     
 

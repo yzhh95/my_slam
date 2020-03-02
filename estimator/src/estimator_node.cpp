@@ -17,6 +17,8 @@
 #include <opencv2/opencv.hpp>
 #include <eigen3/Eigen/Dense>
 #include"estimator.h"
+#include "parameters.h"
+#include "pub_topic.h"
 
 using namespace std;
 using namespace Eigen;
@@ -27,14 +29,9 @@ mutex m_buf;     //保护数据存入
 queue<sensor_msgs::ImageConstPtr> imgleft_buf;
 queue<sensor_msgs::ImageConstPtr> imgright_buf;
 
-void readParameters(string config_file){
-
-}
-
 
 void imu_callback(const sensor_msgs::ImuConstPtr & imu_msg)
 {
-	ROS_INFO("input Imu");
 	double t = imu_msg->header.stamp.toSec();
     double dx = imu_msg->linear_acceleration.x;
     double dy = imu_msg->linear_acceleration.y;
@@ -44,13 +41,12 @@ void imu_callback(const sensor_msgs::ImuConstPtr & imu_msg)
     double rz = imu_msg->angular_velocity.z;
     Vector3d acc(dx, dy, dz);
     Vector3d gyr(rx, ry, rz);
-    //estimator.inputIMU(t, acc, gyr);
+    estimator.inputIMU(t, acc, gyr);
 	return;
 }
 
 void ImageLeft_callback(const sensor_msgs::ImageConstPtr & image_msg)
 {
-	ROS_INFO("ImageLeft");
 	m_buf.lock();
     imgleft_buf.push(image_msg);
     m_buf.unlock();
@@ -60,7 +56,6 @@ void ImageLeft_callback(const sensor_msgs::ImageConstPtr & image_msg)
 
 void ImageRight_callback(const sensor_msgs::ImageConstPtr & image_msg)
 {
-	ROS_INFO("ImageRight");
 	m_buf.lock();
     imgright_buf.push(image_msg);
     m_buf.unlock();
@@ -96,6 +91,7 @@ void sync_process()
 	while(1){
 		cv::Mat imgleft, imgright;
 		std_msgs::Header header;
+		double time=0;
 		m_buf.lock();
 		if (!imgleft_buf.empty() && !imgright_buf.empty())
 		{
@@ -106,17 +102,17 @@ void sync_process()
 			else if(time0 > time1 + 0.003)
 				imgright_buf.pop();
 			else{
+				time = imgleft_buf.front()->header.stamp.toSec();
 				header = imgleft_buf.front()->header;
 				imgleft = getImageFromMsg(imgleft_buf.front());
 				imgleft_buf.pop();
 				imgright = getImageFromMsg(imgright_buf.front());
 				imgright_buf.pop();
-				printf("t0=%lf, t1=%lf \n",time0, time1);
 			}
 		}
 		m_buf.unlock();
-		//if(!imgleft.empty())
-			//estimator.inputImage(imgleft_buf.front()->header.stamp.toSec(), imgleft, imgright);
+		if(!imgleft.empty())
+			estimator.inputImage(time, imgleft, imgright);
 
 		std::chrono::milliseconds dura(2);
 		std::this_thread::sleep_for(dura);
@@ -139,13 +135,14 @@ int main(int argc, char **argv)
 
 	string config_file = argv[1];
 	readParameters(config_file);
+	registerPub(n);
     estimator.setParameter();
 
 	//订阅双目相机的图像消息和imu数据
 	ROS_WARN("waiting for image and imu...");
 	ros::Subscriber sub_imu=n.subscribe("/kitti/oxts/imu" , 2000 , imu_callback  , ros::TransportHints().tcpNoDelay());
-	ros::Subscriber sub_image=n.subscribe("/kitti/camera_color_left/image_raw" , 100 , ImageLeft_callback);
-	ros::Subscriber sub_image=n.subscribe("/kitti/camera_color_right/image_raw" , 100 , ImageRight_callback);
+	ros::Subscriber sub_image_left = n.subscribe(IMAGE0_TOPIC, 100 , ImageLeft_callback);
+	ros::Subscriber sub_image_right = n.subscribe(IMAGE1_TOPIC , 100 , ImageRight_callback);
 
 	thread sync_thread{ sync_process};
 

@@ -65,6 +65,7 @@ class FeaturePerId
 class FeatureManager
 {
 public:
+
     bool addFeatureCheckParallax(int frame_count,const map<int, vector< Eigen::Matrix<double,7,1>>> &image);
 
     void initFramePoseByPnP(int frameCnt, Vector3d Ps[], Matrix3d Rs[], Vector3d tic[], Matrix3d ric[]);
@@ -80,6 +81,8 @@ public:
     list<FeaturePerId> feature;    
 
     void removeOutlier(set<int> &outlierIndex);
+
+    void clearState();
 
                 
 private:

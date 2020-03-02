@@ -1,6 +1,5 @@
 #include "parameters.h"
 
-double INIT_DEPTH;     //特征点的初始深度
 double MIN_PARALLAX;   //视差阈值
 std::vector<Eigen::Matrix3d> RIC;   
 std::vector<Eigen::Vector3d> TIC;
@@ -10,9 +9,10 @@ int MIN_DIST;    //特征点之间的最小距离
 std::string IMU_TOPIC;   
 std::string IMAGE0_TOPIC, IMAGE1_TOPIC;
 std::vector<std::string> CAM_NAMES;    //相机的模型文件
+int SHOW_TRACK;  //观察跟踪特征点 
 int NUM_ITERATIONS;  
 double F_THRESHOLD;
-double SOLVER_TIME;    
+double SOLVER_TIME;   
 
 void readParameters(std::string config_file)
 {
@@ -31,6 +31,8 @@ void readParameters(std::string config_file)
     MIN_PARALLAX = MIN_PARALLAX / FOCAL_LENGTH;
     ROW = fsSettings["image_height"];
     COL = fsSettings["image_width"];
+    SHOW_TRACK=fsSettings["show_track"];
+
 
     cv::Mat cv_T;
     Eigen::Matrix4d T;

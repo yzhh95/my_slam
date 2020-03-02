@@ -1,18 +1,18 @@
 #include"estimator.h"
 
-Estimator::Estimator()
+Estimator::Estimator() 
 {
-	processThread = std::thread(&Estimator::processMeasurements, this);
+    clearState();
 }
 
 Estimator::~Estimator()
 {
-	    processThread.join();
-        printf("join thread \n");
+    Flag_thread=false;
+	processThread.join();
+    printf("join thread \n");
 }
 
 void Estimator::processMeasurements()
-
 {
 	while(1)
 	{
@@ -24,7 +24,7 @@ void Estimator::processMeasurements()
             feature = featureBuf.front();
 			featureBuf.pop();
 			mBuf.unlock();
-			processImage(feature.second, feature.first);
+			processImage(feature.second);
 			
 			std_msgs::Header header;
             header.frame_id = "world";
@@ -40,31 +40,73 @@ void Estimator::processMeasurements()
 	}
 }
 
-void Estimator::clearState(){
-	 inputImageCnt = 0;
+void Estimator::clearState()
+{
+	inputImageCnt = 0;
+    mProcess.lock();
+    while(!featureBuf.empty())
+        featureBuf.pop();
+    for (int i = 0; i < WINDOW_SIZE + 1; i++)
+    {
+        Rs[i].setIdentity();
+        Ps[i].setZero();
+    }
+    for (int i = 0; i < 2; i++)
+    {
+        tic[i] = Vector3d::Zero();
+        ric[i] = Matrix3d::Identity();
+    }
+    frame_count = 0;
+    solver_flag = 0;
+    f_manager.clearState();
+    mProcess.unlock();
 }
 
-void Estimator::setParameter(){
-	return;
+void Estimator::setParameter()
+{
+    mProcess.lock();
+    for (int i = 0; i < 2; i++)
+    {
+        tic[i] = TIC[i];
+        ric[i] = RIC[i];
+        cout << " exitrinsic cam " << i << endl  << ric[i] << endl << tic[i].transpose() << endl;
+    }
+    featureTracker.readIntrinsicParameter(CAM_NAMES);
+    Flag_thread=true;
+    //processThread = std::thread(&Estimator::processMeasurements, this);
+    mProcess.unlock();
+    ROS_INFO("setParameter finish");
 }
 
-void Estimator::inputImage(double time, cv::Mat imgleft, cv::Mat imgright){
+//每两帧才做一次关键帧pnp估计
+void Estimator::inputImage(double time, cv::Mat &imgleft, cv::Mat &imgright)
+{
 	inputImageCnt++;
 	map<int, vector<Eigen::Matrix<double, 7, 1>>> featureFrame;
 	featureFrame=featureTracker.trackImage(time,imgleft,imgright);
-	if(inputImageCnt%2==0){
+     if (SHOW_TRACK)
+    {
+        cv::Mat imgTrack = featureTracker.imTrack;
+        std_msgs::Header header;
+        header.frame_id = "world";
+        header.stamp = ros::Time(time);
+        sensor_msgs::ImagePtr imgTrackMsg = cv_bridge::CvImage(header, "bgr8", imgTrack).toImageMsg();
+        pub_image_track.publish(imgTrackMsg);
+    }
+	if(inputImageCnt%2==0)
+    {
 		mBuf.lock();
 		featureBuf.push(make_pair(time,featureFrame));
 		mBuf.unlock();
 	}
-		return;
 }
 
-void Estimator::inputIMU(double time, Vector3d acc, Vector3d gyr){
+void Estimator::inputIMU(double time, Vector3d acc, Vector3d gyr)
+{
 	return;
 }
 
-void Estimator::processImage(const map<int, vector< Eigen::Matrix<double, 7, 1>>> &image, const double t)
+void Estimator::processImage(const map<int, vector< Eigen::Matrix<double, 7, 1>>> &image)
 {
     ROS_DEBUG("Adding feature points %lu", image.size());
 	if(f_manager.addFeatureCheckParallax(frame_count,image))
@@ -99,14 +141,6 @@ void Estimator::processImage(const map<int, vector< Eigen::Matrix<double, 7, 1>>
 		set<int> removeIndex;
         outliersRejection(removeIndex);
         f_manager.removeOutlier(removeIndex);    //去除深度估计误差较大的点
-		 if (failureDetection())
-		 {
-           	ROS_WARN("failure detection!");
-            clearState();
-            setParameter();
-            ROS_WARN("system reboot!");
-            return;
-		 }
 		slideWindow();
 	}
 }
@@ -116,7 +150,6 @@ void Estimator::slideWindow()
 {
     if (marginalization_flag == 0)
     {
-        double t_0 = Headers[0];
 		Matrix3d back_R0 = Rs[0];
         Vector3d back_P0 = Ps[0];
         if (frame_count == WINDOW_SIZE)
@@ -206,4 +239,9 @@ double Estimator::reprojectionError(Matrix3d &Ri, Vector3d &Pi, Matrix3d &rici, 
     double rx = residual.x();
     double ry = residual.y();
     return sqrt(rx * rx + ry * ry);
+}
+
+void Estimator::optimization()
+{
+    return ;
 }
