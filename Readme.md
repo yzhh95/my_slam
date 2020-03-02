@@ -3,7 +3,7 @@
 ## estimator
 - 双目相机实现里程计前端
 
-![2020-03-02 17-06-09 的屏幕截图](/home/yzh/catkin_ws/src/vloam_demo/config/2020-03-02 17-06-09 的屏幕截图.png)
+![2020-03-02 17-06-09 的屏幕截图](https://github.com/HITE401/yzh/blob/master/config/2020-03-02%2017-06-09%20%E7%9A%84%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE.png)
 
 ## loop
 
